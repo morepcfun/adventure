@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Adventure RPG Game</title>
-<meta name="author" content="Johnny Heggelund">
-<link rel="icon" type="image/x-icon" href="favicon.ico">
+<title>Adventure RPG Game Online</title>
+<meta name="description" content="An epic adventure RPG with infinite worlds, monsters, epic loot, and resource gathering. Every fifth world takes you to The Underworld!">
+<meta name="author" content="AI Girl & Bossman">
+<meta name="robots" content="index, follow">
 <style>
 body,
 html {
@@ -513,17 +514,17 @@ font-size: 1.6rem;
 <button id="how-to-play-button" class="game-button top-left">❓</button>
 <button id="save-game-button" class="game-button top-right">💾</button>
 <div id="hud">
-<div class="hud-item"> <span class="hud-label">Level</span> <span id="level-display" class="hud-value">1</span> </div>
-<div class="hud-item" id="hud-hp"> <span class="hud-label">❤️ Health</span> <span id="hp-display" class="hud-value">100/100</span> </div>
-<div class="hud-item" id="hud-strength"> <span class="hud-label">⚔️ Strength</span> <span id="strength-display" class="hud-value">5</span> </div>
-<div class="hud-item" id="hud-weapon"> <span class="hud-label">Weapon</span>
+<div class="hud-item"> <span class="hud-label" id="level-label"></span> <span id="level-display" class="hud-value">1</span> </div>
+<div class="hud-item" id="hud-hp"> <span class="hud-label" id="hp-label"></span> <span id="hp-display" class="hud-value">100/100</span> </div>
+<div class="hud-item" id="hud-strength"> <span class="hud-label" id="strength-label"></span> <span id="strength-display" class="hud-value">5</span> </div>
+<div class="hud-item" id="hud-weapon"> <span class="hud-label" id="weapon-label"></span>
 <div id="weapon-bar"></div>
 </div>
-<div class="hud-item" id="hud-xp"> <span class="hud-label">⭐ XP</span> <span id="xp-display" class="hud-value">0/20</span> </div>
-<div class="hud-item"> <span class="hud-label">🪵 Wood</span> <span id="wood-display" class="hud-value">0</span> </div>
-<div class="hud-item"> <span class="hud-label">🪨 Stone</span> <span id="stone-display" class="hud-value">0</span> </div>
-<div class="hud-item"> <span class="hud-label">➡️ Arrows</span> <span id="arrows-display" class="hud-value">0</span> </div>
-<div class="hud-item"> <span class="hud-label">🔑 Key</span> <span id="key-display" class="hud-value">❌</span> </div>
+<div class="hud-item" id="hud-xp"> <span class="hud-label" id="xp-label"></span> <span id="xp-display" class="hud-value">0/20</span> </div>
+<div class="hud-item"> <span class="hud-label" id="wood-label"></span> <span id="wood-display" class="hud-value">0</span> </div>
+<div class="hud-item"> <span class="hud-label" id="stone-label"></span> <span id="stone-display" class="hud-value">0</span> </div>
+<div class="hud-item"> <span class="hud-label" id="arrows-label"></span> <span id="arrows-display" class="hud-value">0</span> </div>
+<div class="hud-item"> <span class="hud-label" id="key-label"></span> <span id="key-display" class="hud-value">❌</span> </div>
 <div class="hud-item"> <span id="time-display" class="hud-value">☀️ Day</span> </div>
 </div>
 <div id="game-world" oncontextmenu="return false;">
@@ -541,16 +542,83 @@ font-size: 1.6rem;
 </div>
 </div>
 <script>
-// STATS-FETCHER-START
-fetch('https://www.chromebooker.com/stats/visitors.php', {
-method: 'POST',
-headers: {
-'Content-Type': 'application/json'
-},
-body: JSON.stringify({ page: window.location.href })
-});
-// STATS-FETCHER-END
 document.addEventListener('DOMContentLoaded', () => {
+const lang = {
+level: "Level",
+health: "❤️ Health",
+strength: "⚔️ Strength",
+weapon: "Weapon",
+xp: "⭐ XP",
+wood: "🪵 Wood",
+stone: "🪨 Stone",
+arrows: "➡️ Arrows",
+key: "🔑 Key",
+day: "☀️ Day",
+night: "🌙 Night",
+cannotSaveInFight: "Cannot save during a fight!",
+gameSaved: "Game saved! ✅",
+saveError: "Error: Could not save the game.",
+gameLoaded: "Game loaded!",
+loadError: "Error: Could not load the game.",
+mapGenError: "Could not generate map...",
+doorLocked: "The door is locked! You need a key 🔑.",
+foundKey: "You found the key! 🔑 Find the door 🚪!",
+fullHealth: "You have full health and do not need food right now.",
+defeatedMonster: "Defeated",
+strengthIncreased: "✨ Strength increased to",
+levelUp: "Congratulations! You reached level",
+levelUpChallenge: "! The challenges get tougher...",
+gameOver: "GAME OVER 💀<br>Loading last save...",
+tooWeakToGather: "You are too weak to gather resources!",
+gatheredWood: "wood, -",
+gatheredStone: "stone, -",
+builtShelter: "You built a shelter! 🏰",
+cannotBuildHere: "You cannot build here!",
+needMoreWoodForShelter: "Need {amount} wood to build a shelter.",
+needMoreWoodForCrossbow: "Need {amount} wood to craft a crossbow.",
+needMoreHealthToBuild: "Need more than {amount} health to build.",
+alreadyCrafted: "You have already crafted",
+needMoreStoneFor: "Need {amount} stone for",
+crafted: "You crafted a",
+needCrossbowForArrows: "You need a crossbow to craft arrows.",
+needMoreWoodForArrows: "Need {amount} wood to craft arrows.",
+craftedArrows: "You crafted 50 arrows!",
+outOfArrows: "You are out of arrows!",
+switchedTo: "Switched to",
+sinisterPresence: "A sinister presence is felt... 👻",
+ghostAttack: "👻 The ghost attacked! You lost",
+ghostStole: "It stole:",
+swanHeal: "The magic swan 🦢 heals you! You have full health ❤️.",
+unarmed: "Fistfight",
+crossbow: "Crossbow",
+sword: "Stone Sword",
+sledge: "Stone Sledge",
+helpTitle: "Adventure RPG Browser Game",
+howToPlayTitle: "📜 How to Play (Level",
+yourGoalTitle: "Your Goal 🗺️",
+yourGoalText: "Find the key 🔑, unlock the door 🚪, and reach the next level. Survive against monsters that get stronger each level.",
+attributesTitle: "Your Attributes",
+healthAttr: "<strong>❤️ Health:</strong> Your life force. Restored by eating food (🍓, 🍉) or by touching the magic swan 🦢 at a lake.",
+strengthAttr: "<strong>⚔️ Strength:</strong> Your attack power. Permanently increases by collecting enough experience points (XP).",
+xpAttr: "<strong>⭐ XP:</strong> Earned by defeating monsters.",
+resourcesAttr: "<strong>🪵 Wood/🪨 Stone:</strong> Resources for building. Costs health to gather.",
+underworldInfo: "Every 5th level (5, 10, 15...) is a dark and dangerous underworld where you can gather stone to craft new weapons like the Stone Sword and Stone Sledge, which are powerful melee weapons!",
+controlsTitle: "Actions & Controls",
+controlsCostInfo: "Remember, building costs both resources and Health ❤️!",
+controlsMove: "<strong>WASD / Arrow keys:</strong> Move.",
+controlsWeapon: "<strong>Number keys (1,2,3...):</strong> Switch active weapon.",
+controlsGather: "<strong>Click on 🌲/🪨:</strong> Gather resource (costs {amount} ❤️).",
+controlsBuildShelter: "<strong>'B' key:</strong> Build shelter (costs {wood} 🪵, {hp} ❤️).",
+controlsCraftCrossbow: "<strong>'C' key:</strong> Craft Crossbow (costs {wood} 🪵).",
+controlsCraftArrows: "<strong>'P' key:</strong> Craft arrows (costs {wood} 🪵).",
+controlsCraftSword: "<strong>'V' key:</strong> Craft Stone Sword (costs {stone} 🪨).",
+controlsCraftSledge: "<strong>'H' key:</strong> Craft Stone Sledge (costs {stone} 🪨).",
+controlsShoot: "<strong>Right-click:</strong> Shoot (if crossbow is selected).",
+tipsTitle: "Strategic Tips 💡",
+tip1: "Fear the night (🌙)! Monsters become much stronger. A shelter (🏰) is your best friend.",
+tip2: "Look for a lake with a swan 🦢. If you reach it, it will heal you to full health!",
+tip3: "At night, ghosts 👻 hunt! If they catch you outside a shelter, they steal your items."
+};
 const gameContainer = document.getElementById('game-container');
 const gameWorld = document.getElementById('game-world');
 const nightOverlay = document.getElementById('night-overlay');
@@ -584,10 +652,10 @@ STONE_SWORD: '🗡️', STONE_SLEDGE: '🔨',
 WATER: '🟦', SWAN: '🦢'
 };
 const WEAPONS = {
-'unarmed': { name: 'Fistfight', emoji: '👊', type: 'melee', damageBonus: 1.0 },
-'crossbow': { name: 'Crossbow', emoji: TILE.CROSSBOW, type: 'ranged' },
-'sword': { name: 'Stone Sword', emoji: TILE.STONE_SWORD, type: 'melee', damageBonus: 1.2 },
-'sledge': { name: 'Stone Hammer', emoji: TILE.STONE_SLEDGE, type: 'melee', damageBonus: 1.4 },
+'unarmed': { name: lang.unarmed, emoji: '👊', type: 'melee', damageBonus: 1.0 },
+'crossbow': { name: lang.crossbow, emoji: TILE.CROSSBOW, type: 'ranged' },
+'sword': { name: lang.sword, emoji: TILE.STONE_SWORD, type: 'melee', damageBonus: 1.2 },
+'sledge': { name: lang.sledge, emoji: TILE.STONE_SLEDGE, type: 'melee', damageBonus: 1.4 },
 };
 const WEAPON_HOTBAR_ORDER = ['unarmed', 'crossbow', 'sword', 'sledge'];
 const objectData = {
@@ -624,6 +692,24 @@ let messageQueue = [];
 let isDisplayingMessage = false;
 let playerFloatingTextContainer;
 let mainGameLoopId = null;
+const hudLabels = {
+level: document.getElementById('level-label'),
+health: document.getElementById('hp-label'),
+strength: document.getElementById('strength-label'),
+weapon: document.getElementById('weapon-label'),
+xp: document.getElementById('xp-label'),
+wood: document.getElementById('wood-label'),
+stone: document.getElementById('stone-label'),
+arrows: document.getElementById('arrows-label'),
+key: document.getElementById('key-label')
+};
+function updateStaticUIText() {
+for (const key in hudLabels) {
+if (hudLabels[key]) {
+hudLabels[key].textContent = lang[key];
+}
+}
+}
 function showFloatingText(htmlContent) {
 if (!playerFloatingTextContainer) return;
 const textElement = document.createElement('div');
@@ -700,7 +786,7 @@ lastFrameTime = performance.now();
 mainGameLoopId = requestAnimationFrame(mainGameLoop);
 }
 function saveGame() {
-if (gameState.isFighting) { showMessage('Cannot save during a fight!'); return; }
+if (gameState.isFighting) { showMessage(lang.cannotSaveInFight); return; }
 try {
 const stateToSave = JSON.parse(JSON.stringify(gameState));
 delete stateToSave.playerStatusBar;
@@ -708,10 +794,10 @@ delete stateToSave.activeProjectiles;
 delete stateToSave.levelConfig;
 delete stateToSave.monsterAttackInterval;
 localStorage.setItem('emojiQuest2SaveData', JSON.stringify(stateToSave));
-showMessage('Game saved! ✅');
+showMessage(lang.gameSaved);
 } catch (error) {
 console.error('Failed to save game:', error);
-showMessage('Error: Could not save the game.');
+showMessage(lang.saveError);
 }
 }
 function loadGame() {
@@ -770,7 +856,7 @@ else { nightOverlay.classList.remove('is-night'); }
 gameLoopInterval = setInterval(gameTick, 1000);
 lastFrameTime = performance.now();
 mainGameLoopId = requestAnimationFrame(mainGameLoop);
-showMessage('Game loaded!');
+showMessage(lang.gameLoaded);
 return true;
 } catch (error) {
 console.error('Failed to load game:', error);
@@ -889,7 +975,7 @@ if (gameState.world[ny][nx] === TILE.EMPTY) openCount++;
 if (openCount >= 2) break;
 tries++;
 }
-if (!startPos) { showMessage('Could not generate map...', () => window.location.reload(), true); return; }
+if (!startPos) { showMessage(lang.mapGenError, () => window.location.reload(), true); return; }
 let openCount = 0;
 for (let dy = -1; dy <= 1; dy++) {
 for (let dx = -1; dx <= 1; dx++) {
@@ -916,9 +1002,9 @@ break;
 }
 }
 const doorPos = getRandomEmptyPosition(TILE.EMPTY, [startPos], 50);
-if (!doorPos) { showMessage('Could not generate map...', () => window.location.reload(), true); return; }
+if (!doorPos) { showMessage(lang.mapGenError, () => window.location.reload(), true); return; }
 const keyPos = getRandomEmptyPosition(TILE.EMPTY, [startPos, doorPos], 40);
-if (!keyPos) { showMessage('Could not generate map...', () => window.location.reload(), true); return; }
+if (!keyPos) { showMessage(lang.mapGenError, () => window.location.reload(), true); return; }
 gameState.player.pos = startPos;
 gameState.keyPos = keyPos;
 gameState.doorPos = doorPos;
@@ -953,11 +1039,11 @@ gameState.monsters = [];
 placeResourceClusters(TILE.STONE, 80, 8);
 placeResourceClusters(TILE.WALL_1, 25, 5);
 const startPos = getRandomEmptyPosition(TILE.EMPTY, [], 1);
-if (!startPos) { showMessage('Failed to generate the map...', () => window.location.reload(), true); return; }
+if (!startPos) { showMessage(lang.mapGenError, () => window.location.reload(), true); return; }
 const doorPos = getRandomEmptyPosition(TILE.EMPTY, [startPos], 50);
-if (!doorPos) { showMessage('Failed to generate the map...', () => window.location.reload(), true); return; }
+if (!doorPos) { showMessage(lang.mapGenError, () => window.location.reload(), true); return; }
 const keyPos = getRandomEmptyPosition(TILE.EMPTY, [startPos, doorPos], 40);
-if (!keyPos) { showMessage('Failed to generate the map...', () => window.location.reload(), true); return; }
+if (!keyPos) { showMessage(lang.mapGenError, () => window.location.reload(), true); return; }
 gameState.player.pos = startPos;
 gameState.keyPos = keyPos;
 gameState.doorPos = doorPos;
@@ -1179,11 +1265,11 @@ delete visibleMonsterElements[monsterId];
 function handleInteraction(x, y, tile) {
 if (x === gameState.doorPos.x && y === gameState.doorPos.y) {
 if (gameState.player.hasKey) { levelUp(); }
-else { showMessage('The door is locked! You need a key 🔑.'); }
+else { showMessage(lang.doorLocked); }
 } else if (x === gameState.keyPos.x && y === gameState.keyPos.y && !gameState.player.hasKey) {
 gameState.player.hasKey = true;
 updateCell(x, y, gameState.world[y][x]);
-showMessage('You found the key! 🔑 Find the door 🚪!');
+showMessage(lang.foundKey);
 updateHUD();
 } else {
 const item = objectData[tile];
@@ -1194,7 +1280,7 @@ updateCell(x, y, TILE.EMPTY);
 updateHUD();
 showPlayerStatusBar();
 } else {
-showMessage('You have full health and do not need food now.');
+showMessage(lang.fullHealth);
 }
 }
 }
@@ -1244,7 +1330,7 @@ updateHUD();
 function killMonster(monster) {
 monster.isDying = true;
 const reward = objectData[monster.tile].xpReward || 0;
-showMessage(`Defeated ${monster.tile}! +${reward} XP ⭐`);
+showMessage(`${lang.defeatedMonster} ${monster.tile}! +${reward} XP ⭐`);
 gameState.player.xp += reward;
 checkIfStrengthIncreases();
 updateHUD();
@@ -1272,7 +1358,7 @@ while (gameState.player.xp >= gameState.player.xpForNextStrength) {
 gameState.player.xp -= gameState.player.xpForNextStrength;
 gameState.player.strength++;
 gameState.player.xpForNextStrength = Math.floor(gameState.player.xpForNextStrength * 1.5);
-showMessage(`✨ Strength increased to ${gameState.player.strength}! ✨`, null, false);
+showMessage(`${lang.strengthIncreased} ${gameState.player.strength}! ✨`, null, false);
 updateHUD();
 }
 }
@@ -1436,7 +1522,7 @@ if (swan && gameState.player.hp < gameState.player.maxHp) {
 const distanceToSwan = Math.hypot(pPos.x - swan.x, pPos.y - swan.y);
 if (distanceToSwan < 1.5) {
 gameState.player.hp = gameState.player.maxHp;
-showMessage(`The magic swan 🦢 heals you! You have full health ❤️.`);
+showMessage(lang.swanHeal);
 updateHUD();
 showPlayerStatusBar();
 }
@@ -1452,7 +1538,7 @@ keyDisplay.textContent = gameState.player.hasKey ? '✅' : '❌';
 woodDisplay.textContent = gameState.player.wood;
 stoneDisplay.textContent = gameState.player.stone;
 arrowsDisplay.textContent = gameState.player.inventory.includes('crossbow') ? gameState.player.arrows : '—';
-timeDisplay.textContent = gameState.timeOfDay === 'day' ? '☀️ Day' : '🌙 Night';
+timeDisplay.textContent = gameState.timeOfDay === 'day' ? lang.day : lang.night;
 updateWeaponBar();
 }
 function updateWeaponBar() {
@@ -1478,7 +1564,7 @@ function equipWeapon(weaponId) {
 if (gameState.player.inventory.includes(weaponId)) {
 gameState.player.equippedWeapon = weaponId;
 const weaponData = WEAPONS[weaponId];
-showMessage(`Switched to ${weaponData.name} ${weaponData.emoji}`);
+showMessage(`${lang.switchedTo} ${weaponData.name} ${weaponData.emoji}`);
 updateHUD();
 }
 }
@@ -1533,49 +1619,49 @@ messageButton.addEventListener('click', tempHandler);
 function showHowToPlay() {
 const costs = gameState.levelConfig;
 const instructions = `
-<h1>Adventure RPG PC Browser Game</h1>
-<h2 class="how-to-play-title">📜 How to Play (Level ${gameState.level}) 📜</h2>
+<h1>${lang.helpTitle}</h1>
+<h2 class="how-to-play-title">${lang.howToPlayTitle} ${gameState.level}) 📜</h2>
 <div class="how-to-play-columns">
 <div class="how-to-play-column">
-<h3>Your Goal 🗺️</h3>
-<p>Find the key 🔑, unlock the door 🚪, and reach the next level. Survive against monsters that get stronger each level.</p>
-<h3>Your Attributes</h3>
+<h3>${lang.yourGoalTitle}</h3>
+<p>${lang.yourGoalText}</p>
+<h3>${lang.attributesTitle}</h3>
 <ul>
-<li><strong>❤️ Health:</strong> Your life force. Restored by eating food (🍓, 🍉) or touching the magic swan 🦢 at a lake.</li>
-<li><strong>⚔️ Strength:</strong> Your attack power. Permanently increases by collecting enough experience points (XP).</li>
-<li><strong>⭐ XP:</strong> Earned by defeating monsters.</li>
-<li><strong>🪵 Wood/🪨 Stone:</strong> Resources for building. Costs health to gather.</li>
+<li>${lang.healthAttr}</li>
+<li>${lang.strengthAttr}</li>
+<li>${lang.xpAttr}</li>
+<li>${lang.resourcesAttr}</li>
 </ul>
 <ul>
-<li>Every 5th level (5, 10, 15...) is a dark and dangerous underworld where you can gather stone to craft new weapons like Stone Sword and Stone Sledge, which are powerful melee weapons!</li>
+<li>${lang.underworldInfo}</li>
 </ul>
 </div>
 <div class="how-to-play-column">
-<h3>Actions & Controls</h3>
-<p>Remember, building costs both resources and Health ❤️!</p>
+<h3>${lang.controlsTitle}</h3>
+<p>${lang.controlsCostInfo}</p>
 <ul>
-<li><strong>WASD / Arrow keys:</strong> Move.</li>
-<li><strong>Number keys (1,2,3...):</strong> Switch active weapon.</li>
-<li><strong>Click on 🌲/🪨:</strong> Gather resource (costs ${gameConfig.gatherHPCost} ❤️).</li>
-<li><strong>'B' key:</strong> Build shelter (cost: ${costs.shelterWoodCost} 🪵, ${costs.shelterHPCost} ❤️).</li>
-<li><strong>'C' key:</strong> Craft Crossbow (cost: ${costs.crossbowWoodCost} 🪵).</li>
-<li><strong>'P' key:</strong> Craft arrows (cost: ${gameConfig.arrowCraftingCost} 🪵).</li>
-<li><strong>'V' key:</strong> Craft Stone Sword (cost: ${gameConfig.stoneSwordCost} 🪨).</li>
-<li><strong>'H' key:</strong> Craft Stone Sledge (cost: ${gameConfig.stoneSledgeCost} 🪨).</li>
-<li><strong>Right-click:</strong> Shoot (if crossbow is selected).</li>
+<li>${lang.controlsMove}</li>
+<li>${lang.controlsWeapon}</li>
+<li>${lang.controlsGather.replace('{amount}', gameConfig.gatherHPCost)}</li>
+<li>${lang.controlsBuildShelter.replace('{wood}', costs.shelterWoodCost).replace('{hp}', costs.shelterHPCost)}</li>
+<li>${lang.controlsCraftCrossbow.replace('{wood}', costs.crossbowWoodCost)}</li>
+<li>${lang.controlsCraftArrows.replace('{wood}', gameConfig.arrowCraftingCost)}</li>
+<li>${lang.controlsCraftSword.replace('{stone}', gameConfig.stoneSwordCost)}</li>
+<li>${lang.controlsCraftSledge.replace('{stone}', gameConfig.stoneSledgeCost)}</li>
+<li>${lang.controlsShoot}</li>
 </ul>
 </div>
 </div>
-<h3>Strategic Tips 💡</h3>
+<h3>${lang.tipsTitle}</h3>
 <ul style="text-align: left; list-style-position: inside; padding-left: 0;">
-<li>Fear the night (🌙)! Monsters become much stronger. A shelter (🏰) is your best friend.</li>
-<li>Look for a lake with a swan 🦢. If you reach it, it will heal you to full health!</li>
-<li>At night, ghosts 👻 hunt! If they catch you outside a shelter, they steal your items.</li>
+<li>${lang.tip1}</li>
+<li>${lang.tip2}</li>
+<li>${lang.tip3}</li>
 </ul>`;
 showMessage(instructions, null, true);
 }
 function gatherResource(resource, cellElement) {
-if (gameState.player.hp <= gameConfig.gatherHPCost) { showMessage('You are too weak to gather resources!'); return; }
+if (gameState.player.hp <= gameConfig.gatherHPCost) { showMessage(lang.tooWeakToGather); return; }
 resource.hits++;
 cellElement.classList.add('shaking');
 setTimeout(() => cellElement.classList.remove('shaking'), 150);
@@ -1599,8 +1685,8 @@ showPlayerStatusBar();
 function buildShelter() {
 if (gameState.isFighting) return;
 const costs = gameState.levelConfig;
-if (gameState.player.wood < costs.shelterWoodCost) { showMessage(`Need ${costs.shelterWoodCost} 🪵 for shelter.`); return; }
-if (gameState.player.hp <= costs.shelterHPCost) { showMessage(`Need >${costs.shelterHPCost} ❤️ to build.`); return; }
+if (gameState.player.wood < costs.shelterWoodCost) { showMessage(lang.needMoreWoodForShelter.replace('{amount}', costs.shelterWoodCost)); return; }
+if (gameState.player.hp <= costs.shelterHPCost) { showMessage(lang.needMoreHealthToBuild.replace('{amount}', costs.shelterHPCost)); return; }
 const p = gameState.player.pos;
 const currentTile = gameState.world[p.y][p.x];
 const pathTile = gameState.isUnderworld ? TILE.UW_PATH : TILE.PATH;
@@ -1609,47 +1695,47 @@ gameState.player.wood -= costs.shelterWoodCost;
 gameState.player.hp -= costs.shelterHPCost;
 updateCell(p.x, p.y, TILE.SHELTER);
 updateHUD();
-showMessage(`You built a shelter! ${TILE.SHELTER}`);
+showMessage(lang.builtShelter);
 } else {
-showMessage('You cannot build here!');
+showMessage(lang.cannotBuildHere);
 }
 }
 function buildStoneWeapon(weaponType) {
 if (gameState.isFighting) return;
-if (gameState.player.inventory.includes(weaponType)) { showMessage(`You have already crafted ${WEAPONS[weaponType].name}.`); return; }
-const cost = weaponType === 'sword' ? gameConfig.stoneSwordCost : gameConfig.stoneSledgeCost;
 const weaponData = WEAPONS[weaponType];
-if (gameState.player.stone < cost) { showMessage(`Need ${cost} 🪨 for ${weaponData.name}.`); return; }
+if (gameState.player.inventory.includes(weaponType)) { showMessage(`${lang.alreadyCrafted} ${weaponData.name}.`); return; }
+const cost = weaponType === 'sword' ? gameConfig.stoneSwordCost : gameConfig.stoneSledgeCost;
+if (gameState.player.stone < cost) { showMessage(`${lang.needMoreStoneFor.replace('{amount}', cost)} ${weaponData.name}.`); return; }
 gameState.player.stone -= cost;
 gameState.player.inventory.push(weaponType);
 equipWeapon(weaponType);
-showMessage(`You crafted a ${weaponData.name}! ${weaponData.emoji}`);
+showMessage(`${lang.crafted} ${weaponData.name}! ${weaponData.emoji}`);
 }
 function buildCrossbow() {
-if (gameState.player.inventory.includes('crossbow')) { showMessage('You have already crafted a crossbow.'); return; }
-if (gameState.isFighting) return;
 const costs = gameState.levelConfig;
-if (gameState.player.wood < costs.crossbowWoodCost) { showMessage(`Need ${costs.crossbowWoodCost} 🪵 for crossbow.`); return; }
-if (gameState.player.hp <= costs.crossbowHPCost) { showMessage(`Need >${costs.crossbowHPCost} ❤️ to build.`); return; }
+if (gameState.player.inventory.includes('crossbow')) { showMessage(`${lang.alreadyCrafted} ${lang.crossbow}.`); return; }
+if (gameState.isFighting) return;
+if (gameState.player.wood < costs.crossbowWoodCost) { showMessage(lang.needMoreWoodForCrossbow.replace('{amount}', costs.crossbowWoodCost)); return; }
+if (gameState.player.hp <= costs.crossbowHPCost) { showMessage(lang.needMoreHealthToBuild.replace('{amount}', costs.crossbowHPCost)); return; }
 gameState.player.wood -= costs.crossbowWoodCost;
 gameState.player.hp -= costs.crossbowHPCost;
 gameState.player.inventory.push('crossbow');
 gameState.player.arrows += 50;
 equipWeapon('crossbow');
-showMessage(`You crafted a crossbow! ${TILE.CROSSBOW} +50 ${TILE.ARROW}`);
+showMessage(`${lang.crafted} ${lang.crossbow}! ${TILE.CROSSBOW} +50 ${TILE.ARROW}`);
 }
 function craftArrows() {
 if (gameState.isFighting) return;
-if (!gameState.player.inventory.includes('crossbow')) { showMessage('You need a crossbow to craft arrows.'); return; }
+if (!gameState.player.inventory.includes('crossbow')) { showMessage(lang.needCrossbowForArrows); return; }
 const cost = gameConfig.arrowCraftingCost;
-if (gameState.player.wood < cost) { showMessage(`Need ${cost} 🪵 to craft arrows.`); return; }
+if (gameState.player.wood < cost) { showMessage(lang.needMoreWoodForArrows.replace('{amount}', cost)); return; }
 gameState.player.wood -= cost;
 gameState.player.arrows += 50;
 updateHUD();
-showMessage(`You crafted 50 arrows! +50 ${TILE.ARROW}, -${cost} 🪵`);
+showMessage(`${lang.craftedArrows} +50 ${TILE.ARROW}, -${cost} 🪵`);
 }
 function shootCrossbow(targetMapX, targetMapY) {
-if (gameState.player.arrows <= 0) { showMessage(`You are out of arrows! ${TILE.ARROW}`); return; }
+if (gameState.player.arrows <= 0) { showMessage(lang.outOfArrows); return; }
 const pPos = gameState.player.pixelPos;
 const dx = targetMapX - pPos.x; const dy = targetMapY - pPos.y;
 if (Math.hypot(dx, dy) < cellSize / 2) return;
@@ -1753,7 +1839,7 @@ function spawnGhosts() {
 if (gameState.isFighting) return;
 const ghostCount = 2 + gameState.level;
 placeMonsters(TILE.GHOST, ghostCount);
-showMessage('A sinister presence is felt... 👻');
+showMessage(lang.sinisterPresence);
 }
 function moveMonsters() {
 const playerInShelterAtNight = gameState.timeOfDay === 'night' && gameState.world[gameState.player.pos.y][gameState.player.pos.x] === TILE.SHELTER;
@@ -1799,8 +1885,8 @@ if (newKeyPos) { gameState.keyPos = newKeyPos; updateCell(newKeyPos.x, newKeyPos
 }
 gameState.player.hp = Math.max(0, gameState.player.hp - damage);
 updateHUD();
-let message = `👻 The ghost attacked! You lost ${damage} ❤️.`;
-if (stolenItems.length > 0) { message += ` It stole: ${stolenItems.join(', ')}!`; }
+let message = `${lang.ghostAttack} ${damage} ❤️.`;
+if (stolenItems.length > 0) { message += ` ${lang.ghostStole} ${stolenItems.join(', ')}!`; }
 showMessage(message);
 ghostsToRemove.push(monster.id);
 const monsterEl = visibleMonsterElements[monster.id];
@@ -1869,13 +1955,13 @@ despawnGhosts();
 updateHUD();
 }
 function levelUp() {
-showMessage(`Congratulations! You reached level ${gameState.level + 1}! The challenges get tougher...`, setupNewGame, true);
+showMessage(`${lang.levelUp} ${gameState.level + 1}! ${lang.levelUpChallenge}`, setupNewGame, true);
 }
 function gameOver() {
 gameState.isGameOver = true;
 clearInterval(gameLoopInterval);
 cancelAnimationFrame(mainGameLoopId);
-showMessage('GAME OVER 💀<br>Loading last save...', () => {
+showMessage(lang.gameOver, () => {
 if (!loadGame()) {
 window.location.reload();
 }
@@ -1933,11 +2019,13 @@ render();
 });
 saveGameButton.addEventListener('click', saveGame);
 howToPlayButton.addEventListener('click', showHowToPlay);
+updateStaticUIText();
 if (!loadGame()) {
 setupNewGame();
 }
 showHowToPlay();
 });
 </script>
+<script src="/stats/tracker.js" defer></script>
 </body>
 </html>
